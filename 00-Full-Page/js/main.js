@@ -4,6 +4,10 @@ ScrollTrigger.defaults({
   markers: true,
 });
 
+const mq = window.matchMedia("(min-width: 768px)");
+
+//* NAV HEADER
+
 function initNavigation() {
   const mainNavLinks = gsap.utils.toArray(".main-nav a");
   const mainNavLinksRev = gsap.utils.toArray(".main-nav a").reverse();
@@ -41,6 +45,7 @@ function initNavigation() {
     },
     onEnter: ({ direction }) => navAnimation(direction),
     onLeaveBack: ({ direction }) => navAnimation(direction),
+    markers: false,
   });
 }
 
@@ -90,6 +95,8 @@ function moveImages(e) {
   });
 }
 
+//* PART2
+
 const initHoverReval = () => {
   const sections = gsap.utils.toArray(".rg__column");
 
@@ -104,22 +111,6 @@ const initHoverReval = () => {
 
     const textHeight = textCopy.clientHeight;
 
-    gsap.set(imageBlock, {
-      yPercent: -100,
-    });
-
-    gsap.set(image, {
-      scale: 1.2,
-    });
-
-    gsap.set(mask, {
-      yPercent: 100,
-    });
-
-    gsap.set(textMask, {
-      yPercent: -100,
-    });
-
     const tl = gsap.timeline({
       defaults: {
         duration: 0.7,
@@ -127,7 +118,7 @@ const initHoverReval = () => {
       },
     });
 
-    section.addEventListener("mouseenter", (e) => {
+    function mouseEnterCb() {
       tl.to([imageBlock, mask], {
         yPercent: 0,
         duration: 0.7,
@@ -154,9 +145,9 @@ const initHoverReval = () => {
           },
           "<"
         );
-    });
+    }
 
-    section.addEventListener("mouseleave", (e) => {
+    function mouseLeaveCb() {
       tl.to([imageBlock, textMask], {
         yPercent: -100,
       })
@@ -181,6 +172,137 @@ const initHoverReval = () => {
           },
           "<"
         );
+    }
+
+    if (mq.matches) {
+      gsap.set(imageBlock, {
+        yPercent: -100,
+      });
+
+      gsap.set(image, {
+        scale: 1.2,
+      });
+
+      gsap.set(mask, {
+        yPercent: 100,
+      });
+
+      gsap.set(textMask, {
+        yPercent: -100,
+      });
+
+      section.addEventListener("mouseenter", mouseEnterCb);
+
+      section.addEventListener("mouseleave", mouseLeaveCb);
+    }
+
+    mq.addEventListener("change", ({ matches }) => {
+      if (matches) {
+        gsap.set(imageBlock, {
+          yPercent: -100,
+        });
+
+        gsap.set(image, {
+          scale: 1.2,
+        });
+
+        gsap.set(mask, {
+          yPercent: 100,
+        });
+
+        gsap.set(textMask, {
+          yPercent: -100,
+        });
+
+        section.addEventListener("mouseenter", mouseEnterCb);
+        section.addEventListener("mouseleave", mouseLeaveCb);
+      } else {
+        [imageBlock, image, mask, text, textCopy, textMask].forEach((el) => {
+          gsap.set(el, { clearProps: "all" });
+          tl.killTweensOf(el);
+        });
+
+        section.removeEventListener("mouseenter", mouseEnterCb);
+        section.removeEventListener("mouseleave", mouseLeaveCb);
+      }
+    });
+  });
+};
+
+//* PART3
+
+const allLinks = gsap.utils.toArray(".portfolio__categories a");
+const pageBackground = document.querySelector(".fill-background");
+const largeImage = document.querySelector(".portfolio__image--l");
+const smallImage = document.querySelector(".portfolio__image--s");
+const lInside = document.querySelector(".portfolio__image--l .image_inside");
+const sInside = document.querySelector(".portfolio__image--s .image_inside");
+
+const initPortfolioHover = () => {
+  allLinks.forEach((link) => {
+    link.addEventListener("mouseenter", (e) => {
+      const { color, imagelarge, imagesmall } = e.target.dataset;
+
+      const tl = gsap.timeline();
+
+      const siblingLinks = allLinks.filter((link) => link !== e.target);
+
+      tl.set(lInside, { backgroundImage: `url(${imagelarge})` })
+        .set(sInside, {
+          backgroundImage: `url(${imagesmall})`,
+        })
+        .to([largeImage, smallImage], {
+          duration: 1,
+          autoAlpha: 1,
+        })
+        .to(
+          siblingLinks,
+          {
+            duration: 1,
+            autoAlpha: 0.2,
+          },
+          "<"
+        )
+        .to(
+          e.target,
+          {
+            color: "#FFF",
+            duration: 1,
+          },
+          "<"
+        )
+        .to(
+          pageBackground,
+          {
+            backgroundColor: color,
+            duration: 0.5,
+          },
+          "<"
+        );
+    });
+    link.addEventListener("mouseleave", (e) => {
+      const tl = gsap.timeline();
+
+      tl.to([largeImage, smallImage], {
+        duration: 0.7,
+        autoAlpha: 0,
+      })
+        .to(
+          allLinks,
+          {
+            autoAlpha: 1,
+            duration: 0.7,
+            color: "#000",
+          },
+          "<"
+        )
+        .to(
+          pageBackground,
+          {
+            backgroundColor: "unset",
+          },
+          "<"
+        );
     });
   });
 };
@@ -189,6 +311,7 @@ function init() {
   initNavigation();
   initHeaderTilt();
   initHoverReval();
+  initPortfolioHover();
   // start here
 }
 
